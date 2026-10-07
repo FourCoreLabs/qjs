@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/fastschema/qjs"
+	"github.com/FourCoreLabs/qjs"
 	"github.com/stretchr/testify/assert"
 )
 

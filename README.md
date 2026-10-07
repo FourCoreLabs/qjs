@@ -1,5 +1,7 @@
-> **FourCore fork.** This fork adds two sandboxing controls for running
-> untrusted, model-written scripts. Everything else is upstream `v0.0.6`.
+> **FourCore fork of [fastschema/qjs](https://github.com/fastschema/qjs)** (MIT; upstream
+> copyright retained in `LICENSE`). Module path: `github.com/FourCoreLabs/qjs`. It adds two
+> sandboxing controls for running untrusted, model-written scripts; everything else is
+> upstream `v0.0.6`.
 >
 > - `Option.NoHostFS` - instantiate with **no WASI filesystem capability**. Upstream
 >   always preopens the host working directory at `/` with read/write access, so
@@ -8,24 +10,23 @@
 > - `qjs.MaxMemoryPages` - hard cap on each runtime's WASM linear memory (64 KiB
 >   pages), enforced by wazero rather than QuickJS's own accounting.
 >
-> Tests: `nohostfs_test.go` (includes a control proving the probe sees the host
-> mount when it is present). Use via
-> `replace github.com/fastschema/qjs => github.com/FourCoreLabs/qjs v0.0.6-fourcore.1`.
+> Tests: `nohostfs_test.go` (includes a control proving the probe sees the host mount
+> when it is present). Use it directly: `go get github.com/FourCoreLabs/qjs`.
 
 # QJS - JavaScript in Go with QuickJS and Wazero
 
 <p align="center">
-  <a href="https://pkg.go.dev/github.com/fastschema/qjs#section-readme" target="_blank" rel="noopener">
+  <a href="https://pkg.go.dev/github.com/FourCoreLabs/qjs#section-readme" target="_blank" rel="noopener">
     <img src="https://img.shields.io/badge/go.dev-reference-blue?logo=go&logoColor=white" alt="Go.Dev reference" />
   </a>
-  <a href="https://goreportcard.com/report/github.com/fastschema/qjs" target="_blank" rel="noopener">
-    <img src="https://goreportcard.com/badge/github.com/fastschema/qjs" alt="go report card" />
+  <a href="https://goreportcard.com/report/github.com/FourCoreLabs/qjs" target="_blank" rel="noopener">
+    <img src="https://goreportcard.com/badge/github.com/FourCoreLabs/qjs" alt="go report card" />
   </a>
   <a href="https://codecov.io/gh/fastschema/qjs/branch/master" >
     <img src="https://codecov.io/gh/fastschema/qjs/branch/master/graph/badge.svg?token=yluqOtL5z0"/>
   </a>
-  <a href="https://github.com/fastschema/qjs/actions" target="_blank" rel="noopener">
-    <img src="https://github.com/fastschema/qjs/actions/workflows/ci.yml/badge.svg" alt="test status" />
+  <a href="https://github.com/FourCoreLabs/qjs/actions" target="_blank" rel="noopener">
+    <img src="https://github.com/FourCoreLabs/qjs/actions/workflows/ci.yml/badge.svg" alt="test status" />
   </a>
   <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">
     <img src="https://img.shields.io/badge/license-MIT-brightgreen.svg" alt="MIT license" />
@@ -159,7 +160,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/fastschema/qjs"
+	"github.com/FourCoreLabs/qjs"
 )
 
 func must[T any](val T, err error) T {
@@ -504,7 +505,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/fastschema/qjs"
+	"github.com/FourCoreLabs/qjs"
 )
 
 type Post struct {
@@ -591,7 +592,7 @@ import (
 	"log"
 	"sync"
 
-	"github.com/fastschema/qjs"
+	"github.com/FourCoreLabs/qjs"
 )
 
 func main() {
@@ -648,12 +649,12 @@ func main() {
 ## Installation
 
 ```bash
-go get github.com/fastschema/qjs
+go get github.com/FourCoreLabs/qjs
 ```
 
 
 ```go
-import "github.com/fastschema/qjs"
+import "github.com/FourCoreLabs/qjs"
 ```
 
 **Compatible with Go 1.22.0+**
@@ -795,7 +796,7 @@ defer result.Free()
 
 ```bash
 # Clone with submodules
-git clone --recursive https://github.com/fastschema/qjs.git
+git clone --recursive https://github.com/FourCoreLabs/qjs.git
 cd qjs
 
 # Install WASI SDK (Linux/macOS)
@@ -819,7 +820,7 @@ go test ./...
 
 We'd love your help making QJS better! Here's how:
 
-1. **Found a bug?** [Open an issue](https://github.com/fastschema/qjs/issues).
+1. **Found a bug?** [Open an issue](https://github.com/FourCoreLabs/qjs/issues).
 2. **Want a feature?** Start a discussion.
 3. **Ready to code?** Fork, branch, test, and submit a PR.
 4. **Review PRs** - help review and test contributions.
@@ -827,9 +828,9 @@ We'd love your help making QJS better! Here's how:
 
 ## Support & Community
 
-- **Documentation**: [GoDoc](https://godoc.org/github.com/fastschema/qjs)
-- **Issues**: [GitHub Issues](https://github.com/fastschema/qjs/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/fastschema/qjs/discussions)
+- **Documentation**: [GoDoc](https://godoc.org/github.com/FourCoreLabs/qjs)
+- **Issues**: [GitHub Issues](https://github.com/FourCoreLabs/qjs/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/FourCoreLabs/qjs/discussions)
 
 **Getting Help:**
 1. Check existing issues and documentation.
@@ -862,7 +863,7 @@ Built on the shoulders of giants:
 **Ready to run JavaScript safely in your Go apps?**
 
 ```bash
-go get github.com/fastschema/qjs
+go get github.com/FourCoreLabs/qjs
 ```
 
-**Questions? Ideas? Contributions?** We're here to help → [Start a discussion](https://github.com/fastschema/qjs/discussions)
+**Questions? Ideas? Contributions?** We're here to help → [Start a discussion](https://github.com/FourCoreLabs/qjs/discussions)

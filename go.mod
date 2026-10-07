@@ -1,4 +1,4 @@
-module github.com/fastschema/qjs
+module github.com/FourCoreLabs/qjs
 
 go 1.22.0
 

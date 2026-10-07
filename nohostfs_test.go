@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/fastschema/qjs"
+	"github.com/FourCoreLabs/qjs"
 )
 
 // probe tries every std/os route to the host filesystem and returns what each
