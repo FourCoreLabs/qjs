@@ -31,7 +31,11 @@ const (
 )
 
 type Option struct {
-	CWD               string
+	CWD string
+	// NoHostFS instantiates the module with no WASI filesystem capability at
+	// all: no preopened directory, so std/os cannot reach any host path. When
+	// set, CWD is ignored and Stdout/Stderr default to io.Discard.
+	NoHostFS          bool
 	StartFunctionName string
 	Context           context.Context
 	// Enabling this option significantly increases evaluation time
@@ -221,7 +225,7 @@ func getRuntimeOption(registry *ProxyRegistry, options ...Option) (option Option
 		option = options[0]
 	}
 
-	if option.CWD == "" {
+	if option.CWD == "" && !option.NoHostFS {
 		if option.CWD, err = os.Getwd(); err != nil {
 			return Option{}, fmt.Errorf("cannot get current working directory: %w", err)
 		}
@@ -236,11 +240,19 @@ func getRuntimeOption(registry *ProxyRegistry, options ...Option) (option Option
 	}
 
 	if option.Stdout == nil {
-		option.Stdout = os.Stdout
+		if option.NoHostFS {
+			option.Stdout = io.Discard
+		} else {
+			option.Stdout = os.Stdout
+		}
 	}
 
 	if option.Stderr == nil {
-		option.Stderr = os.Stderr
+		if option.NoHostFS {
+			option.Stderr = io.Discard
+		} else {
+			option.Stderr = os.Stderr
+		}
 	}
 
 	return option, nil

@@ -1,3 +1,17 @@
+> **FourCore fork.** This fork adds two sandboxing controls for running
+> untrusted, model-written scripts. Everything else is upstream `v0.0.6`.
+>
+> - `Option.NoHostFS` - instantiate with **no WASI filesystem capability**. Upstream
+>   always preopens the host working directory at `/` with read/write access, so
+>   `std`/`os` can read and create host files. With `NoHostFS` nothing is mounted,
+>   `CWD` is not resolved, and stdout/stderr default to `io.Discard`.
+> - `qjs.MaxMemoryPages` - hard cap on each runtime's WASM linear memory (64 KiB
+>   pages), enforced by wazero rather than QuickJS's own accounting.
+>
+> Tests: `nohostfs_test.go` (includes a control proving the probe sees the host
+> mount when it is present). Use via
+> `replace github.com/fastschema/qjs => github.com/FourCoreLabs/qjs v0.0.6-fourcore.1`.
+
 # QJS - JavaScript in Go with QuickJS and Wazero
 
 <p align="center">

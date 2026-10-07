@@ -70,6 +70,11 @@ func createGlobalCompiledModule(
 			NewRuntimeConfig().
 			WithCompilationCache(cache).
 			WithCloseOnContextDone(closeOnContextDone)
+		// Hard cap on every instance's linear memory, enforced by wazero itself
+		// (memory.grow fails) rather than by QuickJS's own accounting.
+		if MaxMemoryPages > 0 {
+			cachedRuntimeConfig = cachedRuntimeConfig.WithMemoryLimitPages(MaxMemoryPages)
+		}
 		wrt := wazero.NewRuntimeWithConfig(ctx, cachedRuntimeConfig)
 
 		if compiledQJSModule, err = wrt.CompileModule(ctx, qjsBytes); err != nil {
@@ -81,6 +86,12 @@ func createGlobalCompiledModule(
 
 	return nil
 }
+
+// MaxMemoryPages caps each runtime's WASM linear memory, in 64 KiB pages, with a
+// hard limit enforced by wazero (memory.grow fails and QuickJS reports an
+// out-of-memory error). Zero means no cap. Set it before the first New call:
+// the compiled-module runtime config is process-wide.
+var MaxMemoryPages uint32
 
 // New creates a QuickJS runtime with optional configuration.
 func New(options ...Option) (runtime *Runtime, err error) {
@@ -132,9 +143,10 @@ func New(options ...Option) (runtime *Runtime, err error) {
 		return nil, fmt.Errorf("failed to setup host module: %w", err)
 	}
 
-	fsConfig := wazero.
-		NewFSConfig().
-		WithDirMount(runtime.option.CWD, "/")
+	fsConfig := wazero.NewFSConfig()
+	if !runtime.option.NoHostFS {
+		fsConfig = fsConfig.WithDirMount(runtime.option.CWD, "/")
+	}
 	if runtime.module, err = runtime.wrt.InstantiateModule(
 		option.Context,
 		compiledQJSModule,
