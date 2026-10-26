@@ -62,10 +62,12 @@ type EvalOption struct {
 	bytecodeLen int
 	flags       uint64
 
-	// QuickJS value handles for memory management
+	// WASM memory handles for the C strings, bytecode buffer and the
+	// QJSEvalOptions struct created by Handle(); released by Free().
 	fileValue     *Value
 	codeValue     *Value
 	byteCodeValue *Value
+	optionHandle  *Handle
 }
 
 // EvalOptionFunc configures evaluation behavior using functional option pattern.
@@ -198,24 +200,25 @@ func (o *EvalOption) Handle() (handle uint64) {
 		o.fileValue.Raw(),
 		o.flags,
 	)
+	o.optionHandle = option.handle
 
 	return option.Raw()
 }
 
-// Free releases QuickJS value handles to prevent memory leaks.
-// Must be called after Handle() to clean up WASM memory.
+// Free releases the WASM memory allocated by Handle(): the source, filename
+// and bytecode buffers and the QJSEvalOptions struct. These are plain malloc
+// allocations, not JS values, so they are released with free. Call it only
+// after the eval/load/compile call that used Handle() has returned; QuickJS
+// copies what it keeps (atoms, strings, bytecode), so nothing references them
+// afterwards. Free is idempotent.
 func (o *EvalOption) Free() {
-	if o.fileValue.Raw() != 0 {
-		o.c.Call("JS_FreeValue", o.c.Raw(), o.fileValue.Raw())
+	for _, v := range []*Value{o.fileValue, o.codeValue, o.byteCodeValue} {
+		if v != nil {
+			v.handle.Free()
+		}
 	}
 
-	if o.codeValue != nil && o.codeValue.Raw() != 0 {
-		o.c.Call("JS_FreeValue", o.c.Raw(), o.codeValue.Raw())
-	}
-
-	if o.byteCodeValue != nil && o.byteCodeValue.Raw() != 0 {
-		o.c.Call("JS_FreeValue", o.c.Raw(), o.byteCodeValue.Raw())
-	}
+	o.optionHandle.Free()
 }
 
 func getRuntimeOption(registry *ProxyRegistry, options ...Option) (option Option, err error) {
