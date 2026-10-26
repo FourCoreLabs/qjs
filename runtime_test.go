@@ -217,6 +217,25 @@ func TestRuntime(t *testing.T) {
 		}, "Malloc should panic when context is canceled")
 	})
 
+	t.Run("CloseAfterContextCanceledDoesNotPanic", func(t *testing.T) {
+		for range 5 {
+			ctx, cancel := context.WithCancel(context.Background())
+			rt := must(qjs.New(qjs.Option{
+				Context:            ctx,
+				CloseOnContextDone: true,
+				DisableBuildCache:  true,
+			}))
+			rt.Context().SetFunc("hostFn", func(this *qjs.This) (*qjs.Value, error) {
+				return this.Context().NewString("ok"), nil
+			})
+
+			cancel() // wazero closes the module once the context is done
+			assert.NotPanics(t, rt.Close, "Close should not panic after context cancel")
+			assert.Nil(t, rt.Context(), "Close should release the context")
+			assert.NotPanics(t, rt.Close, "Close should be idempotent")
+		}
+	})
+
 	t.Run("FreeHandleSuccess", func(t *testing.T) {
 		rt, _ := setupTestContext(t)
 		ptr := rt.Malloc(1024)

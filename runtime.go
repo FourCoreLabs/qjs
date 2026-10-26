@@ -95,11 +95,18 @@ var MaxMemoryPages uint32
 
 // New creates a QuickJS runtime with optional configuration.
 func New(options ...Option) (runtime *Runtime, err error) {
+	var wrt wazero.Runtime
+
 	defer func() {
 		rerr := AnyToError(recover())
 		if rerr != nil {
 			runtime = nil
 			err = fmt.Errorf("failed to create QJS runtime: %w", rerr)
+		}
+
+		// Release the per-runtime wazero runtime and its host modules on failure.
+		if err != nil && wrt != nil {
+			_ = wrt.Close(context.Background())
 		}
 	}()
 
@@ -126,10 +133,11 @@ func New(options ...Option) (runtime *Runtime, err error) {
 		registry: proxyRegistry,
 	}
 
-	runtime.wrt = wazero.NewRuntimeWithConfig(
+	wrt = wazero.NewRuntimeWithConfig(
 		option.Context,
 		cachedRuntimeConfig,
 	)
+	runtime.wrt = wrt
 
 	if _, err := wsp1.Instantiate(option.Context, runtime.wrt); err != nil {
 		return nil, fmt.Errorf("failed to instantiate WASI: %w", err)
@@ -194,6 +202,9 @@ func (r *Runtime) String() string {
 }
 
 // Close cleanly shuts down the runtime and frees all associated resources.
+// It is best-effort and never panics: if the module was already closed (for
+// example by wazero when the context ended with CloseOnContextDone), freeing
+// the QJS runtime is skipped and the remaining resources are still released.
 func (r *Runtime) Close() {
 	if r == nil {
 		return
@@ -201,27 +212,42 @@ func (r *Runtime) Close() {
 
 	// Free QJS runtime handle
 	if r.handle != nil {
-		r.FreeQJSRuntime()
+		if r.module != nil && !r.module.IsClosed() {
+			func() {
+				defer func() { _ = recover() }()
+				r.FreeQJSRuntime()
+			}()
+		}
+
 		r.handle = nil
 	}
 
-	// Close WASM module
-	if r.module != nil {
-		r.module.Close(r.context)
-		r.module = nil
-	}
-
-	// Clear references
-	if r.context != nil {
-		r.context = nil
-	}
-
+	// Drop proxies so host closures and their captured state can be collected.
 	if r.registry != nil {
 		r.registry.Clear()
 		r.registry = nil
 	}
 
-	// Clear function references
+	// Close the per-runtime wazero runtime: this closes the QJS module and the
+	// WASI and "env" host modules, releasing their compiled code from the shared
+	// engine. The shared compiled QJS module and compilation cache stay intact.
+	closeCtx := context.Background()
+	if r.context != nil && r.context.Context != nil {
+		closeCtx = r.context.Context
+	}
+
+	if r.module != nil {
+		_ = r.module.Close(closeCtx)
+		r.module = nil
+	}
+
+	if r.wrt != nil {
+		_ = r.wrt.Close(closeCtx)
+		r.wrt = nil
+	}
+
+	// Clear references
+	r.context = nil
 	r.malloc = nil
 	r.free = nil
 	r.mem = nil

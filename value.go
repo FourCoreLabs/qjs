@@ -293,6 +293,8 @@ func (v *Value) GetPropertyStr(name string) *Value {
 func (v *Value) SetPropertyStr(name string, val *Value) {
 	if val != nil {
 		nameVal := v.context.NewStringHandle(name)
+		defer v.context.FreeHandle(nameVal.Raw())
+
 		v.Call("JS_SetPropertyStr", v.Ctx(), v.Raw(), nameVal.Raw(), val.Raw())
 	}
 }
