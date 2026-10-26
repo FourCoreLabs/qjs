@@ -30,9 +30,9 @@ func newCappedRuntime(t *testing.T, pages uint32) *qjs.Runtime {
 	return rt
 }
 
-// TestCStringHandlesAreReleased repeats calls that copy a ~1 MiB Go string
-// into WASM memory far more times than the 32 MiB cap could hold if any copy
-// were leaked.
+// TestCStringHandlesAreReleased repeats calls that copy a ~1 MiB string
+// into or out of WASM memory far more times than the 32 MiB cap could hold
+// if any copy were leaked.
 func TestCStringHandlesAreReleased(t *testing.T) {
 	const iterations = 100
 
@@ -57,6 +57,19 @@ func TestCStringHandlesAreReleased(t *testing.T) {
 				s := ctx.NewString(payload)
 				defer s.Free()
 				require.True(t, s.IsString(), "iteration %d", i)
+			}, "iteration %d", i)
+		}
+	})
+
+	t.Run("ValueString", func(t *testing.T) {
+		ctx := newCappedRuntime(t, 512).Context()
+		for i := range iterations {
+			require.NotPanics(t, func() {
+				// A fresh ~1 MiB JS string each time; String() must not pin it.
+				s, err := ctx.Eval("str.js", qjs.Code(`"x".repeat(1 << 20)`))
+				require.NoError(t, err, "iteration %d", i)
+				defer s.Free()
+				require.Len(t, s.String(), 1<<20, "iteration %d", i)
 			}, "iteration %d", i)
 		}
 	})

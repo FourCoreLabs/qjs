@@ -434,9 +434,8 @@ func TestValuePropertyOperations(t *testing.T) {
 		obj := ctx.NewObject()
 		defer obj.Free()
 
+		// SetPropertyStr takes ownership of val; do not free it.
 		val := ctx.NewString("value")
-		defer val.Free()
-
 		obj.SetPropertyStr("prop", val)
 
 		prop := obj.GetPropertyStr("prop")
@@ -452,9 +451,8 @@ func TestValuePropertyOperations(t *testing.T) {
 		key := ctx.NewString("prop")
 		defer key.Free()
 
+		// SetProperty takes ownership of val; do not free it.
 		val := ctx.NewString("value")
-		defer val.Free()
-
 		obj.SetProperty(key, val)
 
 		prop := obj.GetProperty(key)
@@ -482,9 +480,8 @@ func TestValuePropertyOperations(t *testing.T) {
 		obj := ctx.NewObject()
 		defer obj.Free()
 
+		// SetPropertyStr takes ownership of val; do not free it.
 		val := ctx.NewString("value")
-		defer val.Free()
-
 		obj.SetPropertyStr("prop", val)
 
 		assert.True(t, obj.HasProperty("prop"))
@@ -503,9 +500,8 @@ func TestValuePropertyOperations(t *testing.T) {
 		obj := ctx.NewObject()
 		defer obj.Free()
 
+		// SetPropertyStr takes ownership of val; do not free it.
 		val := ctx.NewString("value")
-		defer val.Free()
-
 		obj.SetPropertyStr("prop", val)
 		assert.True(t, obj.HasProperty("prop"))
 

@@ -196,6 +196,21 @@ func (h *Handle) String() string {
 	return h.runtime.mem.StringFromPackedPtr(h.raw)
 }
 
+// takeJSCString reads the string from a packed box returned by
+// QJS_ToCString/QJS_AtomToCString, then releases the JS C string with
+// JS_FreeCString (the C string pins a JSString) and frees the box.
+func (h *Handle) takeJSCString(ctx uint64) string {
+	defer h.Free()
+
+	if h != nil && !h.IsFreed() && h.raw != 0 {
+		if addr, _ := h.runtime.mem.UnpackPtr(h.raw); addr != 0 {
+			defer h.runtime.Call("JS_FreeCString", ctx, uint64(addr))
+		}
+	}
+
+	return h.String()
+}
+
 // Bytes converts the handle value to []byte by reading from QuickJS memory.
 // Returns empty slice for zero handles or if the handle is freed.
 // The returned bytes are a copy and safe to modify.

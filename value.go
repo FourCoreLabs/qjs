@@ -74,9 +74,8 @@ func (a Atom) Free() {
 
 func (a Atom) String() string {
 	result := a.context.Call("QJS_AtomToCString", a.context.Raw(), a.Raw())
-	defer result.handle.Free()
 
-	return result.handle.String()
+	return result.handle.takeJSCString(a.context.Raw())
 }
 
 func (a Atom) ToValue() *Value {
@@ -594,9 +593,8 @@ func (v *Value) Bytes() []byte {
 
 func (v *Value) String() string {
 	result := v.Call("QJS_ToCString", v.Ctx(), v.Raw())
-	defer result.handle.Free()
 
-	return result.handle.String()
+	return result.handle.takeJSCString(v.Ctx())
 }
 
 // JSONStringify returns the JSON string representation of the value.
